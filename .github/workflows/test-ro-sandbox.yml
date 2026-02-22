@@ -1,0 +1,41 @@
+name: Test ro-sandbox
+
+on:
+  push:
+    paths:
+      - 'ro-sandbox/**'
+      - '.github/workflows/test-ro-sandbox.yml'
+  pull_request:
+    paths:
+      - 'ro-sandbox/**'
+      - '.github/workflows/test-ro-sandbox.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install bubblewrap
+        run: sudo apt-get install -y bubblewrap
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-${{ hashFiles('ro-sandbox/Cargo.lock') }}
+
+      - name: Build
+        run: cargo build --manifest-path ro-sandbox/Cargo.toml
+
+      - name: Run tests
+        run: cargo test --manifest-path ro-sandbox/Cargo.toml
+
+      - name: Clippy
+        run: cargo clippy --manifest-path ro-sandbox/Cargo.toml -- -D warnings
+
+      - name: rustfmt check
+        run: cargo fmt --manifest-path ro-sandbox/Cargo.toml --check

@@ -1,0 +1,21 @@
+[package]
+name = "ro-sandbox"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# Seccomp BPF compilation. Maintained by the AWS Firecracker team.
+seccompiler = "0.4"
+
+# Safe Unix syscall bindings (memfd_create)
+# "fs" is required for memfd_create.
+nix = { version = "0.29", features = ["process", "mman", "fs"] }
+
+# Syscall numbers (SYS_*) and constants (EPERM, PR_SET_SECCOMP, etc.)
+libc = "0.2"
+
+[profile.release]
+# Produces a smaller binary; LTO eliminates dead code from seccompiler
+lto = true
+opt-level = "z"
+strip = true
