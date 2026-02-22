@@ -1,3 +1,9 @@
+// ro-sandbox is x86_64-only: TargetArch::x86_64 is hardcoded in build_seccomp_filter
+// and libc::SYS_* constants are arch-specific. On any other arch the filter would
+// silently use the wrong syscall numbers, degrading security without any error.
+#[cfg(not(target_arch = "x86_64"))]
+compile_error!("ro-sandbox is currently only supported on x86_64");
+
 use std::collections::BTreeMap;
 use std::convert::TryInto;
 use std::ffi::CString;
@@ -163,7 +169,10 @@ fn build_and_load_seccomp_filter() -> i32 {
 
     let raw_fd = fd.into_raw_fd();
 
-    // Write BPF bytes into the memfd via libc to avoid nix API version concerns.
+    // Write BPF bytes into the memfd.
+    // Using libc::write directly rather than nix::unistd::write because nix 0.29
+    // changed write() to take AsFd rather than RawFd, which is incompatible with
+    // the RawFd we hold after calling into_raw_fd().
     let written = unsafe {
         libc::write(
             raw_fd,

@@ -34,7 +34,7 @@ The sandboxed command runs with:
 - `/tmp` and `/var/tmp` are writable (ephemeral `tmpfs`, not visible on the host).
 - `stdin`, `stdout`, and `stderr` pass through normally.
 
-See [the implementation plan](../../agent-notes/projects/readbox/ro-sandbox-plan.md) for
+See [the implementation plan](https://github.com/nverhaaren-ai/agent-notes/blob/main/projects/readbox/ro-sandbox-plan.md) for
 a detailed explanation of each security layer and its rationale.
 
 ## Prerequisites
