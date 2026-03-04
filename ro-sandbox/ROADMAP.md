@@ -25,16 +25,25 @@ everything:
 - `/proc`, `/dev`, `/sys`, `/tmp`, `/var/tmp`, `/run` — already handled as fresh
   mounts.
 
-**Home directory exposure** requires an explicit opt-in. The rule: if cwd is
-anywhere under `$HOME`, ro-sandbox refuses to run without a flag. The reason is
-simple: even if cwd is `/home/user/project` (no secrets directly present),
-`$HOME/.ssh` is adjacent and would be exposed by any bind of `$HOME`.
+Only the cwd itself is bound — not its parent directories. Running from
+`/home/user/project` exposes just that directory; `$HOME/.ssh` and siblings are
+never visible. This makes the common case safe without any extra flags.
+
+A warning (and refusal without an explicit flag) is still needed for the edge
+cases where cwd itself is a broad directory: `$HOME`, `/home`, `/root`, or `/`.
+Running `ro-sandbox` from your home directory directly would otherwise expose
+everything in it.
 
 Proposed flags:
 - `--expose PATH` — bind an additional path read-only (repeatable). Needed for
   home-relative tooling: `--expose ~/.cargo --expose ~/.rustup`.
-- `--expose-home` — shorthand for `--expose $HOME`. Convenience for users who
-  want the current whole-home behaviour.
+- `--expose-home` — shorthand for `--expose $HOME`, and the flag required when
+  cwd is `$HOME`.
+
+The exact list of safe system paths needs to be validated empirically rather than
+specified purely from first principles — running representative programs under
+`strace -e openat` or with `LD_DEBUG=files` and observing what they open before
+any user-visible action is the right way to derive and verify the list.
 
 This composes naturally with the planned `--output-dir` flag (writable bind of a
 specific path).
