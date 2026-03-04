@@ -53,6 +53,12 @@ fn build_seccomp_filter() -> BpfProgram {
         libc::SYS_umount2,
         libc::SYS_pivot_root,
         libc::SYS_chroot,
+        // seccomp filter installation — both syscall interfaces.
+        // prctl(PR_SET_SECCOMP) is also blocked conditionally below.
+        // Filters are additive (cannot loosen restrictions), but a sandboxed process
+        // installing its own filter could use SECCOMP_RET_TRAP to inject synthetic
+        // SIGSYS signals or manipulate syscall error paths in confused-deputy attacks.
+        libc::SYS_seccomp,
         // privilege escalation (unconditional; prctl is handled conditionally below)
         libc::SYS_setuid,
         libc::SYS_setgid,
